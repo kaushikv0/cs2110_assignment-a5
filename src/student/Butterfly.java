@@ -1,7 +1,9 @@
 package student;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -14,6 +16,15 @@ public class Butterfly extends AbstractButterfly {
 			
 	// Initialize a hash table to keep track of tiles which have been visited
 	static Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
+	
+	// Initialize a hash set to keep track of any flowers that were spotted
+	static HashSet<Location> flowerSet = new HashSet<Location>();
+	
+	/** An instance prints the stack for debugging purposes */
+	private void printStack(Deque<Location> stack) {
+		Object[] stackArray = stack.toArray();
+		System.out.println(Arrays.toString(stackArray));
+	}
 	
 	/** An instance retrieves the locations of all tiles surrounding the butterfly */
 	private Location[] getNeighbors(Location currentLocation) {
@@ -140,7 +151,9 @@ public class Butterfly extends AbstractButterfly {
 			// Retrieve and load neighboring tiles into the stack
 			for(Location neighbor : getNeighbors(this.location)) {
 				if(!tilesVisited.containsKey(neighbor)) { visitStack.push(neighbor); }
-			}			
+			}
+			
+			// printStack(visitStack);
 		}
 		
 		return null;
