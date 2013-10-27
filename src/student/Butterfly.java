@@ -24,7 +24,7 @@ public class Butterfly extends AbstractButterfly {
         System.out.println("---------------");
 	}
 	
-	private void tryFly(TileState[][] k, Hashtable<Location,Boolean> tilesVisited, Direction flyDir) {
+	private void dfs(TileState[][] k, Hashtable<Location,Boolean> tilesVisited, Direction flyDir) {
 		int col_E = this.location.col+1;
 		int col_W = this.location.col-1;
 		int row_N = this.location.row-1;
@@ -70,15 +70,15 @@ public class Butterfly extends AbstractButterfly {
 		Location nextW 	= new Location(next_col_W,this.location.row);
 		Location nextNW = new Location(next_col_W,next_row_N);
 		
-			 if(!tilesVisited.containsKey(nextE)) 	{ tryFly(k,tilesVisited,Direction.E);  } 
-		else if(!tilesVisited.containsKey(nextSE)) 	{ tryFly(k,tilesVisited,Direction.SE); } 
-		else if(!tilesVisited.containsKey(nextNE)) 	{ tryFly(k,tilesVisited,Direction.NE); } 
-		else if(!tilesVisited.containsKey(nextS)) 	{ tryFly(k,tilesVisited,Direction.S);  } 
-		else if(!tilesVisited.containsKey(nextSW)) 	{ tryFly(k,tilesVisited,Direction.SW); }
-		else if(!tilesVisited.containsKey(nextW)) 	{ tryFly(k,tilesVisited,Direction.W);  } 
-		else if(!tilesVisited.containsKey(nextNW)) 	{ tryFly(k,tilesVisited,Direction.NW); } 
-		else if(!tilesVisited.containsKey(nextN)) 	{ tryFly(k,tilesVisited,Direction.N);  }
-		else { fly(Direction.opposite(flyDir),danaus.Speed.FAST); }
+			 if(!tilesVisited.containsKey(nextE)) 	{ dfs(k,tilesVisited,Direction.E);  } 
+		else if(!tilesVisited.containsKey(nextSE)) 	{ dfs(k,tilesVisited,Direction.SE); } 
+		else if(!tilesVisited.containsKey(nextNE)) 	{ dfs(k,tilesVisited,Direction.NE); } 
+		else if(!tilesVisited.containsKey(nextS)) 	{ dfs(k,tilesVisited,Direction.S);  } 
+		else if(!tilesVisited.containsKey(nextSW)) 	{ dfs(k,tilesVisited,Direction.SW); }
+		else if(!tilesVisited.containsKey(nextW)) 	{ dfs(k,tilesVisited,Direction.W);  } 
+		else if(!tilesVisited.containsKey(nextNW)) 	{ dfs(k,tilesVisited,Direction.NW); } 
+		else if(!tilesVisited.containsKey(nextN)) 	{ dfs(k,tilesVisited,Direction.N);  }
+		else { dfs(k,tilesVisited,Direction.opposite(flyDir)); }
 	}
 
 	public @Override TileState[][] learn() {
@@ -96,7 +96,7 @@ public class Butterfly extends AbstractButterfly {
 //		writeState(this.location.row-startRow,this.location.col-startCol,k);
 		
 		tilesVisited.put(this.location,true);
-		tryFly(k,tilesVisited,Direction.E);
+		dfs(k,tilesVisited,Direction.E);
 		
 		// printHashMap(tilesVisited);
 		
