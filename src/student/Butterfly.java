@@ -10,34 +10,17 @@ import danaus.*;
 public class Butterfly extends AbstractButterfly {	
 	
 	// Initialize a stack to keep track of the butterfly's flight path
-	Deque<Location> visitStack = new ArrayDeque<Location>();
+	static Deque<Location> visitStack = new ArrayDeque<Location>();
 			
 	// Initialize a hash table to keep track of tiles which have been visited
-	Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
+	static Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
 	
-	private Location peekLocation(Direction dir) {
-		Location loc = null;
-		int col_E = this.location.col+1;
-		int col_W = this.location.col-1;
-		int row_N = this.location.row-1;
-		int row_S = this.location.row+1;
-		
-		switch (dir) {
-		case N:  loc = new Location(this.location.col,row_N); 	break;
-		case NE: loc = new Location(col_E,row_N); 				break;
-		case E:  loc = new Location(col_E,this.location.row); 	break;
-		case SE: loc = new Location(col_E,row_S); 				break;
-		case S:  loc = new Location(this.location.col,row_S); 	break;
-		case SW: loc = new Location(col_W,row_S); 				break;
-		case W:  loc = new Location(col_W,this.location.row); 	break;
-		case NW: loc = new Location(col_W,row_N); 				break;
-		}
-		return loc;
-	}
-	
+	/** An instance retrieves the locations of all tiles surrounding the butterfly */
 	private Location[] getNeighbors(Location currentLocation) {
+		// Initialize an empty array with 8 elements - one for each cardinal direction
 		Location[] neighbors = new Location[8];
 		
+		// Calculate the x and y coordinates of the cardinal directions
 		int col_E = currentLocation.col+1;
 		int col_W = currentLocation.col-1;
 		int row_N = currentLocation.row-1;
@@ -55,60 +38,95 @@ public class Butterfly extends AbstractButterfly {
 		return neighbors;
 	}
 	
+	/** An instance determines the direction in which a butterfly should fly to reach a specified location */
 	public void flyTo(Location desiredLocation) {
+		// Initialize the current location into a variable
 		Location currentLocation = this.location;
+		
+		// Calculate the x and y difference between the two tiles
+		// This should always only be an integer difference of range [-1 1]
 		int rowdiff = desiredLocation.row - currentLocation.row;
 		int coldiff = desiredLocation.col - currentLocation.col;
 		
-		if (coldiff > 0) { // Eastern-half
-			if (rowdiff < 0) { // NE
-				fly(danaus.Direction.NE,danaus.Speed.FAST);
-				System.out.println("Flying NE");
-			} else if (rowdiff == 0) { // N
-				fly(danaus.Direction.E,danaus.Speed.FAST); 
-				System.out.println("Flying E");
-			} else { // SE
-				fly(danaus.Direction.SE,danaus.Speed.FAST); 
-				System.out.println("Flying SE");
-			}
+		if (coldiff > 0) {		   // Eastern-half
+				 if (rowdiff <  0) { fly(danaus.Direction.NE,danaus.Speed.FAST); } 
+			else if (rowdiff == 0) { fly(danaus.Direction.E,danaus.Speed.FAST);  } 
+			else if (rowdiff >  0) { fly(danaus.Direction.SE,danaus.Speed.FAST); }
 		} else if (coldiff == 0) { // Central-axis
-			if (rowdiff < 0) { // N
-				fly(danaus.Direction.N,danaus.Speed.FAST); 
-				System.out.println("Flying N");
-			} else if (rowdiff == 0) { // Current Location
-				System.out.println("No flight required");
-				return;
-			} else { // S
-				fly(danaus.Direction.S,danaus.Speed.FAST); 
-				System.out.println("Flying S");
-			}
-		} else { // Western-half
-			if (rowdiff < 0) { // NW
-				fly(danaus.Direction.NW,danaus.Speed.FAST);
-				System.out.println("Flying NW");
-			} else if (rowdiff == 0) { // W 
-				fly(danaus.Direction.W,danaus.Speed.FAST);
-				System.out.println("Flying W");
-			} else { // SW
-				fly(danaus.Direction.SW,danaus.Speed.FAST);
-				System.out.println("Flying SW");
-			}
+				 if (rowdiff <  0) { fly(danaus.Direction.N,danaus.Speed.FAST);  } 
+			else if (rowdiff == 0) { return; } 
+			else if (rowdiff >  0) { fly(danaus.Direction.S,danaus.Speed.FAST);  }
+		} else {				   // Western-half
+				 if (rowdiff <  0) { fly(danaus.Direction.NW,danaus.Speed.FAST); } 
+			else if (rowdiff == 0) { fly(danaus.Direction.W,danaus.Speed.FAST);  } 
+			else if (rowdiff >  0) { fly(danaus.Direction.SW,danaus.Speed.FAST); }
 		}
 	}
 	
+	/** An instance tries to fly the butterfly in a direction determined by the stack */
 	public void tryFly() {
+		// Pull off the topmost value from the stack and make it our target
 		Location desiredLocation = visitStack.pop();
+		
 		try {
 			flyTo(desiredLocation);
+			
 			// Set the current location as visited
 			tilesVisited.put(this.location,true);
+			
+			// TODO: Write the TileState to memory
 		}
 		catch (danaus.ObstacleCollisionException e) {
-			visitStack.remove(desiredLocation);
+			// Set the obstacle tile as visited
+			tilesVisited.put(desiredLocation,true);
+			
 			tryFly();
 		}
 	}
 	
+	/**
+	 * Returns a two-dimensional array of TileStates that represents the map the
+	 * butterfly is on.
+	 * 
+	 * During the learning phase of a simulation, butterflies are tasked with
+	 * learning the map in preparation for the running phase of a simulation. 
+	 * A butterfly should traverse the entire map and generate a two-dimensional
+	 * array of TileStates in which each TileState corresponds to the
+	 * appropriate in the map. For example, consider the map with the following
+	 * TileStates.
+	 * 
+	 * <code>
+	 * 					 			 -----
+	 * 								|a|b|c|
+	 *                   			 -----
+	 *                  			|d|e|f|
+	 *                   			 -----
+	 * </code>
+	 * A butterfly should return an identical array. The following arrays are
+	 * all incorrect.
+	 * 
+	 * <code>
+	 *                               -----
+	 * 								|f|e| |
+	 *                   			 -----
+	 *                  			|a|b|d|
+	 *                   			 -----
+	 *                                ---
+	 * 								 |a|b|
+	 * 								  ---
+	 *                  			 |d|e|
+	 *                         	      ---
+	 * </code>
+	 *
+	 * The returned array is graded based on the percentage of correctly 
+	 * identified TileStates. It is recommended that a butterfly save the 
+	 * TileState array to use during the running phase of a simulation.
+	 *
+	 * For more information, refer to Danaus' documentation.
+	 * 
+	 * @return A two-dimensional array of TileStates that represents the map the
+	 * butterfly is on.
+	 */
 	public @Override TileState[][] learn() {		
 		// Set the current location as visited
 		tilesVisited.put(this.location,true);
@@ -121,9 +139,7 @@ public class Butterfly extends AbstractButterfly {
 			
 			// Retrieve and load neighboring tiles into the stack
 			for(Location neighbor : getNeighbors(this.location)) {
-				if(!tilesVisited.containsKey(neighbor)) {
-					visitStack.push(neighbor);
-				}
+				if(!tilesVisited.containsKey(neighbor)) { visitStack.push(neighbor); }
 			}			
 		}
 		
