@@ -7,7 +7,7 @@ package danaus;
 public enum Speed {
 	SLOW  ( 1, -3),
 	NORMAL( 0,  0),
-	FAST  (-300,  3);
+	FAST  (-1,  3);
 	
 	/** The slow down associated with a speed. */
 	public final int slowDownNumber;

@@ -1,13 +1,19 @@
 package student;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Stack;
 
 import danaus.*;
 
 public class Butterfly extends AbstractButterfly {	
+	
+	// Initialize a stack to keep track of the butterfly's flight path
+	Deque<Location> visitStack = new ArrayDeque<Location>();
+			
+	// Initialize a hash table to keep track of tiles which have been visited
+	Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
 	
 	private Location peekLocation(Direction dir) {
 		Location loc = null;
@@ -55,69 +61,66 @@ public class Butterfly extends AbstractButterfly {
 		int coldiff = desiredLocation.col - currentLocation.col;
 		
 		if (coldiff > 0) { // Eastern-half
-			if (rowdiff < 0) { // Desired tile is to the North-east
-				try { fly(danaus.Direction.NE,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
-			} else if (rowdiff == 0) { // Desired tile is to the North
-				try { fly(danaus.Direction.N,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
-			} else { // Desired tile is to the South-east
-				try { fly(danaus.Direction.SE,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
+			if (rowdiff < 0) { // NE
+				fly(danaus.Direction.NE,danaus.Speed.FAST);
+				System.out.println("Flying NE");
+			} else if (rowdiff == 0) { // N
+				fly(danaus.Direction.E,danaus.Speed.FAST); 
+				System.out.println("Flying E");
+			} else { // SE
+				fly(danaus.Direction.SE,danaus.Speed.FAST); 
+				System.out.println("Flying SE");
 			}
-		} else if (coldiff == 0) { // Central axis
-			if (rowdiff < 0) { // North
-				try { fly(danaus.Direction.N,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
-			} else if (rowdiff == 0) { // Desired tile is the current location
+		} else if (coldiff == 0) { // Central-axis
+			if (rowdiff < 0) { // N
+				fly(danaus.Direction.N,danaus.Speed.FAST); 
+				System.out.println("Flying N");
+			} else if (rowdiff == 0) { // Current Location
+				System.out.println("No flight required");
 				return;
-			} else { // South
-				try { fly(danaus.Direction.S,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
+			} else { // S
+				fly(danaus.Direction.S,danaus.Speed.FAST); 
+				System.out.println("Flying S");
 			}
 		} else { // Western-half
-			if (rowdiff < 0) { // Desired tile is to the North-west
-				try { fly(danaus.Direction.NW,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
-			} else if (rowdiff == 0) { // Desired tile is to the West
-				try { fly(danaus.Direction.W,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
-			} else { // Desired tile is to the South-west
-				try { fly(danaus.Direction.SW,danaus.Speed.FAST); }
-				catch (danaus.ObstacleCollisionException e) { }
+			if (rowdiff < 0) { // NW
+				fly(danaus.Direction.NW,danaus.Speed.FAST);
+				System.out.println("Flying NW");
+			} else if (rowdiff == 0) { // W 
+				fly(danaus.Direction.W,danaus.Speed.FAST);
+				System.out.println("Flying W");
+			} else { // SW
+				fly(danaus.Direction.SW,danaus.Speed.FAST);
+				System.out.println("Flying SW");
 			}
 		}
 	}
 	
-	public @Override TileState[][] learn() {
-		// Initialize a stack to keep track of the butterfly's flight path
-		Stack<Location> visitStack = new Stack<Location>();
-		
-		// Initialize a hash table to keep track of tiles which have been visited
-		Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
-		
-		// Initialize a variable for the current location
-		Location currentLocation = this.location;
-		
+	public void tryFly() {
+		Location desiredLocation = visitStack.pop();
+		try {
+			flyTo(desiredLocation);
+			// Set the current location as visited
+			tilesVisited.put(this.location,true);
+		}
+		catch (danaus.ObstacleCollisionException e) {
+			visitStack.remove(desiredLocation);
+			tryFly();
+		}
+	}
+	
+	public @Override TileState[][] learn() {		
 		// Set the current location as visited
-		tilesVisited.put(currentLocation,true);
+		tilesVisited.put(this.location,true);
 		
 		// Add the starting location to the bottom of the stack
 		visitStack.push(this.location);
 		
 		while(!visitStack.isEmpty()) {
-			Location desiredLocation = visitStack.pop();
+			tryFly();
 			
-			flyTo(desiredLocation);
-			
-			currentLocation = desiredLocation;
-			
-			// Set the current tile as visited
-			if(!tilesVisited.containsKey(currentLocation)) {
-				tilesVisited.put(currentLocation,true);
-			}
-			
-			for(Location neighbor : getNeighbors(currentLocation)) {
+			// Retrieve and load neighboring tiles into the stack
+			for(Location neighbor : getNeighbors(this.location)) {
 				if(!tilesVisited.containsKey(neighbor)) {
 					visitStack.push(neighbor);
 				}

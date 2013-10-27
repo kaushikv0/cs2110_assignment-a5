@@ -116,25 +116,28 @@ class Map {
     ////////////////////////////////////////////////////////////////////////////
     // Random Generation Constants
     ////////////////////////////////////////////////////////////////////////////
+    
+    private static final int MAP_FOO = 10;
+    
     /** The inclusive lower bound of a randomly generated map height. */
-    private static final int MIN_HEIGHT = 50;
-    /** The incluse upper bound of a randomly generated map height. */
-    private static final int MAX_HEIGHT = 80;
+    private static final int MIN_HEIGHT = MAP_FOO;
+    /** The inclusive upper bound of a randomly generated map height. */
+    private static final int MAX_HEIGHT = MAP_FOO;
     /** The lower bound on a randomly generated map width. */
-    private static final int MIN_WIDTH = 50;
+    private static final int MIN_WIDTH = MAP_FOO;
     /** The upper bound on a randomly generated map width. */
-    private static final int MAX_WIDTH = 80;
+    private static final int MAX_WIDTH = MAP_FOO;
 
-    /** The desired fraction of map tiles that are not water (ie Land, Forest,
+    /** The desired fraction of map tiles that are not water (i.e. Land, Forest,
      * or Cliff.). The actual fraction of non-water tiles is not guaranteed to
      * equal LAND_FRACTION, but is guaranteed to be a close approximation. */
     private static final double LAND_FRACTION = 0.6;
 
-    /** Out of 10, the probability that a frontiersman will be selected from 
+    /** Out of 10, the probability that a frontiers-man will be selected from 
 	 * the free frontier. For example, a free probability of 8 signifies that
      * 80% of the time, a tile from the free frontier will be grown.
      * <br>
-     * The smoothness of a map's border is inversly proportional to
+     * The smoothness of a map's border is inversely proportional to
      * FREE_PROBABILITY. That is, a larger FREE_PROBABILITY will produce a more
      * jagged border.
      * 
