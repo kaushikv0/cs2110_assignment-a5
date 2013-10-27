@@ -1,118 +1,142 @@
 package student;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
-import java.util.Map.Entry;
+import java.util.Stack;
 
 import danaus.*;
 
-public class Butterfly extends AbstractButterfly {
+public class Butterfly extends AbstractButterfly {	
 	
-	/** An instance fetches the information on the tile and writes it to an array */
-	private void writeState(int col, int row, TileState[][] a) {
-		refreshState();
-		a[row][col] = state;
-	}
-	
-	/** An instance iterates through the tilesVisited HashMap and prints the key-value pair */
-	private void printHashTable(Hashtable<Location,Boolean> m) {
-		Set<Entry<Location,Boolean>> hashSet = m.entrySet();
-        for(Entry<Location,Boolean> entry:hashSet ) {
-            System.out.println("Location = "+entry.getKey()+" | Visited = "+entry.getValue());
-        }
-        System.out.println("---------------");
-	}
-	
-	private void dfs(TileState[][] k, Hashtable<Location,Boolean> tilesVisited, Direction flyDir) {
+	private Location peekLocation(Direction dir) {
+		Location loc = null;
 		int col_E = this.location.col+1;
 		int col_W = this.location.col-1;
 		int row_N = this.location.row-1;
 		int row_S = this.location.row+1;
 		
-		Location N 	= new Location(this.location.col,row_N);
-		Location NE = new Location(col_E,row_N);
-		Location E 	= new Location(col_E,this.location.row);
-		Location SE = new Location(col_E,row_S);
-		Location S 	= new Location(this.location.col,row_S);
-		Location SW = new Location(col_W,row_S);
-		Location W 	= new Location(col_W,this.location.row);
-		Location NW = new Location(col_W,row_N);
-		
-		try {
-			fly(flyDir,danaus.Speed.FAST);
-			tilesVisited.put(this.location,true);
+		switch (dir) {
+		case N:  loc = new Location(this.location.col,row_N); 	break;
+		case NE: loc = new Location(col_E,row_N); 				break;
+		case E:  loc = new Location(col_E,this.location.row); 	break;
+		case SE: loc = new Location(col_E,row_S); 				break;
+		case S:  loc = new Location(this.location.col,row_S); 	break;
+		case SW: loc = new Location(col_W,row_S); 				break;
+		case W:  loc = new Location(col_W,this.location.row); 	break;
+		case NW: loc = new Location(col_W,row_N); 				break;
 		}
-		catch (danaus.ObstacleCollisionException e) {
-			switch (flyDir) {
-				case N:	 tilesVisited.put(N,true);  break;
-				case NE: tilesVisited.put(NE,true); break;
-				case E:	 tilesVisited.put(E,true);  break;
-				case SE: tilesVisited.put(SE,true); break;
-				case S:	 tilesVisited.put(S,true);  break;
-				case SW: tilesVisited.put(SW,true); break;
-				case W:  tilesVisited.put(W,true);  break;
-				case NW: tilesVisited.put(NW,true); break;
+		return loc;
+	}
+	
+	private Location[] getNeighbors(Location currentLocation) {
+		Location[] neighbors = new Location[8];
+		
+		int col_E = currentLocation.col+1;
+		int col_W = currentLocation.col-1;
+		int row_N = currentLocation.row-1;
+		int row_S = currentLocation.row+1;
+		
+		neighbors[0] = new Location(currentLocation.col,row_N); 	// North
+		neighbors[1] = new Location(col_E,row_N); 					// North-east
+		neighbors[2] = new Location(col_E,currentLocation.row); 	// East
+		neighbors[3] = new Location(col_E,row_S);  					// South-east
+		neighbors[4] = new Location(currentLocation.col,row_S); 	// South
+		neighbors[5] = new Location(col_W,row_S);  					// South-west
+		neighbors[6] = new Location(col_W,currentLocation.row); 	// West
+		neighbors[7] = new Location(col_W,row_N); 	 				// North-west
+		
+		return neighbors;
+	}
+	
+	public void flyTo(Location desiredLocation) {
+		Location currentLocation = this.location;
+		int rowdiff = desiredLocation.row - currentLocation.row;
+		int coldiff = desiredLocation.col - currentLocation.col;
+		
+		if (coldiff > 0) { // Eastern-half
+			if (rowdiff < 0) { // Desired tile is to the North-east
+				try { fly(danaus.Direction.NE,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			} else if (rowdiff == 0) { // Desired tile is to the North
+				try { fly(danaus.Direction.N,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			} else { // Desired tile is to the South-east
+				try { fly(danaus.Direction.SE,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			}
+		} else if (coldiff == 0) { // Central axis
+			if (rowdiff < 0) { // North
+				try { fly(danaus.Direction.N,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			} else if (rowdiff == 0) { // Desired tile is the current location
+				return;
+			} else { // South
+				try { fly(danaus.Direction.S,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			}
+		} else { // Western-half
+			if (rowdiff < 0) { // Desired tile is to the North-west
+				try { fly(danaus.Direction.NW,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			} else if (rowdiff == 0) { // Desired tile is to the West
+				try { fly(danaus.Direction.W,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
+			} else { // Desired tile is to the South-west
+				try { fly(danaus.Direction.SW,danaus.Speed.FAST); }
+				catch (danaus.ObstacleCollisionException e) { }
 			}
 		}
-		
-		int next_col_E = this.location.col+1;
-		int next_col_W = this.location.col-1;
-		int next_row_N = this.location.row-1;
-		int next_row_S = this.location.row+1;
-		
-		Location nextN 	= new Location(this.location.col,next_row_N);
-		Location nextNE = new Location(next_col_E,next_row_N);
-		Location nextE 	= new Location(next_col_E,this.location.row);
-		Location nextSE = new Location(next_col_E,next_row_S);
-		Location nextS 	= new Location(this.location.col,next_row_S);
-		Location nextSW = new Location(next_col_W,next_row_S);
-		Location nextW 	= new Location(next_col_W,this.location.row);
-		Location nextNW = new Location(next_col_W,next_row_N);
-		
-			 if(!tilesVisited.containsKey(nextE)) 	{ dfs(k,tilesVisited,Direction.E);  } 
-		else if(!tilesVisited.containsKey(nextSE)) 	{ dfs(k,tilesVisited,Direction.SE); } 
-		else if(!tilesVisited.containsKey(nextNE)) 	{ dfs(k,tilesVisited,Direction.NE); } 
-		else if(!tilesVisited.containsKey(nextS)) 	{ dfs(k,tilesVisited,Direction.S);  } 
-		else if(!tilesVisited.containsKey(nextSW)) 	{ dfs(k,tilesVisited,Direction.SW); }
-		else if(!tilesVisited.containsKey(nextW)) 	{ dfs(k,tilesVisited,Direction.W);  } 
-		else if(!tilesVisited.containsKey(nextNW)) 	{ dfs(k,tilesVisited,Direction.NW); } 
-		else if(!tilesVisited.containsKey(nextN)) 	{ dfs(k,tilesVisited,Direction.N);  }
-		else { dfs(k,tilesVisited,Direction.opposite(flyDir)); }
 	}
-
+	
 	public @Override TileState[][] learn() {
-		// Preallocate an array of identical size to the generated map to store the mapped information
-		TileState[][] k = new TileState[getMapHeight()][getMapWidth()];
+		// Initialize a stack to keep track of the butterfly's flight path
+		Stack<Location> visitStack = new Stack<Location>();
 		
-		// Create an hash map to keep track of which tiles have been visited
-		Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>(getMapWidth()*getMapHeight());
+		// Initialize a hash table to keep track of tiles which have been visited
+		Hashtable<Location,Boolean> tilesVisited = new Hashtable<Location,Boolean>();
 		
-		// Store the starting position
-//		int startRow = this.location.row;
-//		int startCol = this.location.col;
+		// Initialize a variable for the current location
+		Location currentLocation = this.location;
 		
-		// Store the tile which the butterfly starts on
-//		writeState(this.location.row-startRow,this.location.col-startCol,k);
+		// Set the current location as visited
+		tilesVisited.put(currentLocation,true);
 		
-		tilesVisited.put(this.location,true);
-		dfs(k,tilesVisited,Direction.E);
+		// Add the starting location to the bottom of the stack
+		visitStack.push(this.location);
 		
-		// printHashMap(tilesVisited);
+		while(!visitStack.isEmpty()) {
+			Location desiredLocation = visitStack.pop();
+			
+			flyTo(desiredLocation);
+			
+			currentLocation = desiredLocation;
+			
+			// Set the current tile as visited
+			if(!tilesVisited.containsKey(currentLocation)) {
+				tilesVisited.put(currentLocation,true);
+			}
+			
+			for(Location neighbor : getNeighbors(currentLocation)) {
+				if(!tilesVisited.containsKey(neighbor)) {
+					visitStack.push(neighbor);
+				}
+			}			
+		}
 		
 		return null;
 	}
-	
+
 	public @Override List<Flower> flowerList() {
 		// TODO 
 		return null;
 	}
-	
+
 	public @Override Location flowerLocation(Flower f) {
 		// TODO 
 		return null;
 	}
-	
+
 	public @Override void run(List<Flower> flowers) {
 		// DO NOT IMPLEMENT
 	}
