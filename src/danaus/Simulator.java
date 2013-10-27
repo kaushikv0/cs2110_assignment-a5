@@ -258,7 +258,7 @@ public class Simulator {
 	/** Prints victory message and game statistics. */
 	public void headlessVictory() {
 		System.out.println("WIN");
-		System.out.println("============================");
+		System.out.println("=================================");
 		System.out.println(getPerfStats());
 	}
 
@@ -273,68 +273,46 @@ public class Simulator {
 	/** Prints a defeat message and game statistics. */
 	public void headlessFailure() {
 		System.out.println("LOSE.");
-		System.out.println("===========================");
+		System.out.println("==================================");
 		System.out.println(getPerfStats());
 	}
 	
 	/** Return a string version of the game's performance statistics. */
 	private String getPerfStats() {
-		String colOneSize = "15"; // size of first column
+		String colOneSize = "25"; // size of first column
 		String colTwoSize = "6";  // size of second column
 		
 		/* Adjust time according to slow turns. */
 		double totalTime_ = (park.learningTime + park.runningTime) / 1000000000.0;
-		long totalTurns_ = park.state.turn + park.state.slowTurns;
-		double timePerTurn_ = totalTime_ / park.state.turn;
-		double adjustedTime_ = timePerTurn_ * totalTurns_;
+		double tilesExplored_ = park.state.exploredTiles / (double) park.state.numTiles;
 		
 		String turns = String.format(
 			"%-" + colOneSize + "s: %" + colTwoSize + "s\n", 
 			"Turns", park.state.turn
 		);
-		String slowTurns = String.format(
-			"%-" + colOneSize + "s: %" + colTwoSize + "s\n", 
-			"Slow Turns", park.state.slowTurns
-		);
-		String totalTurns = String.format(
-			"%-" + colOneSize + "s: %" + colTwoSize + "s\n", 
-			"Total Turns", totalTurns_
-		);
 		String learningTime = String.format(
 			"%-" + colOneSize + "s: %" + colTwoSize + ".3f\n", 
 			"Learning Time", park.learningTime / 1000000000.0
-		);
-		String runningTime = String.format(
-			"%-" + colOneSize + "s: %" + colTwoSize + ".3f\n", 
-			"Running Time", park.runningTime / 1000000000.0
 		);
 		String totalTime = String.format(
 			"%-" + colOneSize + "s: %" + colTwoSize + ".3f\n", 
 			"Total Time", totalTime_ 
 		);
-		
-		String adjustedTime = String.format(
-			"%-" + colOneSize + "s: %" + colTwoSize + ".3f\n", 
-			"Adjusted Time", adjustedTime_
-		);
 		String learningScore = String.format(
 			"%-" + colOneSize + "s: %" + 
 		    String.valueOf(Integer.parseInt(colTwoSize) - 1) + ".1f%%\n", 
-			"Learning Score", park.learningScore 
+			"TileStates Score", park.learningScore 
 		);
-		String flowersCorrect = String.format(
-			"%-" + colOneSize + "s: %" + colTwoSize + "s", 
-			"Flowers Found", park.numberCorrect(true)
+		String tilesExplored = String.format(
+			"%-" + colOneSize + "s: %" + 
+			String.valueOf(Integer.parseInt(colTwoSize) - 1) + ".1f%%\n", 
+			"Percent Tiles Explored", tilesExplored_ * 100.0
 		);
-
+		
 		return turns + 
-			   slowTurns +
-			   totalTurns +
 			   learningTime + 
-			   runningTime +
 			   totalTime +
-			   adjustedTime +
 			   learningScore +
-			   flowersCorrect;
+			   tilesExplored;
 	}
 }

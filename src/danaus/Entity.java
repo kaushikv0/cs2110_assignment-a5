@@ -43,7 +43,7 @@ public abstract class Entity implements Comparable<Entity> {
     /***************************************************************************
      * Return the location of the entity. 
      **************************************************************************/
-    Location getLocation() {
+    public Location getLocation() {
         return location;
     }
 
@@ -53,14 +53,14 @@ public abstract class Entity implements Comparable<Entity> {
      * @param x The x coordinate of the new location.
      * @param y The y coordinate of the new location.
      **************************************************************************/
-    public void setLocation(int x, int y) {
+    void setLocation(int x, int y) {
         setLocation(new Location(x, y));
     }
 
     /***************************************************************************
      * Set the location of this entity to loc. 
      **************************************************************************/
-    public void setLocation(Location loc) {
+    void setLocation(Location loc) {
         location= loc; 
     }
 
