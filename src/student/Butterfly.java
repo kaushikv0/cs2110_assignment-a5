@@ -1,15 +1,20 @@
 package student;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import danaus.*;
 
 public class Butterfly extends AbstractButterfly {	
+	
+	private TileState[][] result;
 	
 	// Initialize a stack to keep track of the butterfly's flight path
 	static Deque<Location> visitStack = new ArrayDeque<Location>();
@@ -19,6 +24,15 @@ public class Butterfly extends AbstractButterfly {
 	
 	// Initialize a hash set to keep track of any flowers that were spotted
 	static HashSet<Location> flowerSet = new HashSet<Location>();
+	
+	// Initialize a hash map to record each flower's location
+	private Map<Flower, Location> m = new HashMap<Flower, Location>();
+	
+	/** Adds current tilestate to array */ 
+	private void updateState() {
+		refreshState();
+		result[this.location.row][this.location.col] = state;
+	}
 	
 	/** An instance prints the stack for debugging purposes */
 	private void printStack(Deque<Location> stack) {
@@ -58,6 +72,10 @@ public class Butterfly extends AbstractButterfly {
 		// This should always only be an integer difference of range [-1 1]
 		int rowdiff = desiredLocation.row - currentLocation.row;
 		int coldiff = desiredLocation.col - currentLocation.col;
+		if(rowdiff==getMapHeight()-1) rowdiff= -1;
+		if(rowdiff==1-getMapHeight()) rowdiff= 1;
+		if(coldiff==getMapWidth()-1) rowdiff= -1;
+		if(rowdiff==1-getMapWidth()) rowdiff= 1;
 		
 		if (coldiff > 0) {		   // Eastern-half
 				 if (rowdiff <  0) { fly(danaus.Direction.NE,danaus.Speed.FAST); } 
@@ -66,7 +84,7 @@ public class Butterfly extends AbstractButterfly {
 		} else if (coldiff == 0) { // Central-axis
 				 if (rowdiff <  0) { fly(danaus.Direction.N,danaus.Speed.FAST);  } 
 			else if (rowdiff == 0) { return; } 
-			else if (rowdiff >  0) { fly(danaus.Direction.S,danaus.Speed.FAST);  }
+			else if (rowdiff > 0) { fly(danaus.Direction.S,danaus.Speed.FAST);  }
 		} else {				   // Western-half
 				 if (rowdiff <  0) { fly(danaus.Direction.NW,danaus.Speed.FAST); } 
 			else if (rowdiff == 0) { fly(danaus.Direction.W,danaus.Speed.FAST);  } 
@@ -85,7 +103,7 @@ public class Butterfly extends AbstractButterfly {
 			// Set the current location as visited
 			tilesVisited.put(this.location,true);
 			
-			// TODO: Write the TileState to memory
+			updateState();
 		}
 		catch (danaus.ObstacleCollisionException e) {
 			// Set the obstacle tile as visited
@@ -139,6 +157,9 @@ public class Butterfly extends AbstractButterfly {
 	 * butterfly is on.
 	 */
 	public @Override TileState[][] learn() {		
+		result = new TileState[getMapHeight()][getMapWidth()];
+		updateState();
+		
 		// Set the current location as visited
 		tilesVisited.put(this.location,true);
 		
@@ -156,20 +177,140 @@ public class Butterfly extends AbstractButterfly {
 			// printStack(visitStack);
 		}
 		
-		return null;
+		return result;
 	}
 
 	public @Override List<Flower> flowerList() {
-		// TODO 
-		return null;
+		List<Flower> f = new ArrayList<Flower>();
+		for(TileState[] t1 : result) {
+			for(TileState t2 : t1) {
+				try {	
+					for(Flower fl : t2.getFlowers()) {
+						m.put(fl, t2.location);
+					}
+					f.addAll(t2.getFlowers());
+				}
+				catch (NullPointerException e) {};
+			}
+		}
+		return f;
 	}
 
 	public @Override Location flowerLocation(Flower f) {
-		// TODO 
-		return null;
+		return m.get(f);
 	}
 
 	public @Override void run(List<Flower> flowers) {
 		// DO NOT IMPLEMENT
 	}
 }
+
+
+
+// ALTERNATE IMPLEMENTATION
+
+/*package student;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Stack;
+import java.util.Map;
+
+import danaus.*;
+
+*//**
+ * This file is the only .java file you will be submitting to CMS. For javadoc
+ * specifications, refer to AbstractButterfly. You do not need to copy the
+ * javadocs into this file, but you may if you wish.
+ *//*
+public class Butterfly extends AbstractButterfly {
+	private TileState[][] result;
+	private boolean[][] v;
+	private int row, col;
+	private Speed s = Speed.FAST;
+	private Stack<Direction> x = new Stack<Direction>();
+	private Map<Flower, Location> m = new HashMap<Flower, Location>();
+	
+	// Adds current location to the array of TileStates, and marks current location as visited
+	private void updateState() {
+		refreshState();
+		row = state.location.row;
+		col = state.location.col;
+		result[row][col] = state;
+		v[row][col] = true;
+	}
+	
+	// Flies to another tile, adds the new tile's location to the array of TileStates,
+	// and marks that location as visited
+	protected @Override void fly(Direction heading, Speed s) {
+		super.fly(heading, s);
+		updateState();
+	}
+	
+	// De-enumerates the direction values
+	private Direction dir(int r, int c) {
+		if(r==-1 && c==-1) return Direction.NW;
+		if(r==-1 && c==0) return Direction.N;
+		if(r==-1 && c==1) return Direction.NE;
+		if(r==1 && c==-1) return Direction.SW;
+		if(r==1 && c==0) return Direction.S;
+		if(r==1 && c==1) return Direction.SE;
+		if(r==0 && c==-1) return Direction.W;
+		return Direction.E;
+	}
+	
+	// Depth-first search implementation
+	private void dfs() {
+		for(int r=-1; r<=1; r++) {
+			for(int c=-1; c<=1; c++) {
+				if (!v[(row+r+v.length)%v.length][(col+c+v[0].length)%v[0].length]) {
+					try {
+						fly(dir(r,c),s);
+						x.push(dir(r,c));
+						dfs();
+					}
+					catch (ObstacleCollisionException e) {
+						v[(row+r+v.length)%v.length][(col+c+v[0].length)%v[0].length] = true;
+					}
+				}
+			}
+		}
+		if(x.empty()) return;
+		fly(Direction.opposite(x.pop()),s);
+	}
+	
+	public @Override TileState[][] learn() {
+		result = new TileState[getMapHeight()][getMapWidth()];
+		v = new boolean[getMapHeight()][getMapWidth()];
+		updateState();
+		dfs();
+		System.out.println(flowerList());
+		return result;
+	}
+	
+	public @Override List<Flower> flowerList() {
+		List<Flower> f = new ArrayList<Flower>();
+		for(TileState[] t1 : result) {
+			for(TileState t2 : t1) {
+				try {	
+					for(Flower fl : t2.getFlowers()) {
+						m.put(fl, t2.location);
+					}
+					f.addAll(t2.getFlowers());
+				}
+				catch (NullPointerException e) {};
+			}
+		}
+		return f;
+	}
+	
+	public @Override Location flowerLocation(Flower f) {
+		return m.get(f);
+	}
+	
+	public @Override void run(List<Flower> flowers) {
+		// DO NOT IMPLEMENT
+	}
+}
+*/
